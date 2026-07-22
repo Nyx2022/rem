@@ -590,6 +590,9 @@ func (c *Console) Close() error {
 	c.pendingMu.Unlock()
 	agent.Agents.Range(func(key, value interface{}) bool {
 		value.(*agent.Agent).Close(nil)
+		// Remove closed agents immediately so a fast same-alias reconnect
+		// cannot trip the duplicate-ID guard in agent.NewAgent.
+		agent.Agents.Delete(key)
 		return true
 	})
 	return c.tunnel.Close()
